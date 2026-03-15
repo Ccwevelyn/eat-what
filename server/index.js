@@ -7,7 +7,12 @@
 const http = require('http');
 
 const PORT = process.env.PORT || 3000;
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+// 多个 Overpass 节点，一个超时或 504 时自动换下一个
+const OVERPASS_URLS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+];
+const OVERPASS_TIMEOUT_MS = 25000;
 
 // 澳门大致中心，用于无 location 时的兜底
 const MACAU_CENTER = { lat: 22.1987, lng: 113.5439 };
@@ -45,15 +50,28 @@ function formatAddress(tags) {
   return tags['addr:street'] || '澳门';
 }
 
-/** 调用 Overpass API（免费，无需 Key）*/
+/** 调用 Overpass API（免费，无需 Key），带多节点重试 */
 async function overpassQuery(query) {
-  const res = await fetch(OVERPASS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'data=' + encodeURIComponent(query),
-  });
-  if (!res.ok) throw new Error('Overpass API 请求失败: ' + res.status);
-  return res.json();
+  let lastErr;
+  for (const url of OVERPASS_URLS) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'data=' + encodeURIComponent(query),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (!res.ok) throw new Error('Overpass API 请求失败: ' + res.status);
+      return await res.json();
+    } catch (e) {
+      lastErr = e;
+      continue;
+    }
+  }
+  throw new Error(lastErr?.message || 'Overpass API 暂时不可用，请稍后再试');
 }
 
 /** 附近餐厅：范围内餐饮点，按距离排序 */
