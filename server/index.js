@@ -1,17 +1,19 @@
 /**
  * 今天吃啥 - 后端（完全免费，无需 API Key）
- * 使用 OpenStreetMap Overpass API 根据用户位置获取附近餐厅，地址与地区来自 OSM 数据。
+ * Overpass 查附近餐厅，Nominatim 逆地理将经纬度转为可读地址。
  */
 
 const http = require('http');
 
 const PORT = process.env.PORT || 3000;
-// 多个 Overpass 节点，一个超时或 504 时自动换下一个
 const OVERPASS_URLS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
 ];
 const OVERPASS_TIMEOUT_MS = 25000;
+const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse';
+const NOMINATIM_DELAY_MS = 1100; // 遵守 Nominatim 使用政策：1 请求/秒
+const NOMINATIM_MAX_ITEMS = 15;   // 仅对前 15 条调 Nominatim，全部为可读地址
 
 // 澳门大致中心，用于无 location 时的兜底
 const MACAU_CENTER = { lat: 22.1987, lng: 113.5439 };
@@ -44,15 +46,7 @@ function getRegionFromTags(tags) {
   return tags['addr:city'] || tags['addr:suburb'] || tags['addr:district'] || tags['addr:state'] || tags['addr:province'] || '';
 }
 
-/** 根据经纬度推断城市（珠海/澳门），用于修正 OSM 里误标或缺失的地区 */
-function inferCityByCoords(lat, lon) {
-  if (lat == null || lon == null) return '';
-  if (lat >= 22.14 && lat <= 22.22 && lon >= 113.52 && lon <= 113.60) return '澳门';
-  if (lat >= 22.0 && lat <= 22.6 && lon >= 113.0 && lon <= 114.0) return '珠海';
-  return '';
-}
-
-/** 从 tags 拼详细地址（通用，用 OSM 的 addr:*） */
+/** 从 tags 拼详细地址（仅用 OSM 的 addr:*，不推测） */
 function formatAddress(tags) {
   if (!tags) return '';
   const full = tags['addr:full'];
@@ -65,35 +59,52 @@ function formatAddress(tags) {
   return parts.join(' ') || '';
 }
 
-/** 最终展示的 region：优先用坐标推断的城市（珠海/澳门），否则用 OSM */
-function getRegion(tags, lat, lon) {
-  const inferred = inferCityByCoords(lat, lon);
-  if (inferred) return inferred;
-  return getRegionFromTags(tags);
-}
-
-/** 最终展示的 address：用坐标推断修正“误标澳门”的珠海店铺 */
-function getAddress(tags, lat, lon) {
-  let raw = formatAddress(tags);
-  const inferred = inferCityByCoords(lat, lon);
-  if (inferred === '珠海' && raw && (raw.indexOf('澳门') === 0 || raw.startsWith('澳门 '))) {
-    raw = '珠海 ' + raw.replace(/^澳门\s*/, '').trim();
-  }
-  if (!raw && inferred) raw = inferred + ' (暂无详细地址)';
-  return raw || '';
-}
-
-/** OSM cuisine 英文 -> 中文菜系 */
+/** OSM cuisine 英文 -> 中文菜系（印度归南亚，东南亚仅泰越等） */
 const CUISINE_ZH = {
   cantonese: '粤菜', chinese: '中餐', japanese: '日料', korean: '韩餐',
   italian: '西餐', french: '西餐', european: '西餐', american: '西餐',
-  thai: '东南亚', vietnamese: '东南亚', indian: '东南亚',
+  thai: '东南亚', vietnamese: '东南亚', indian: '南亚',
   sichuan: '川菜', hot_pot: '火锅', tea: '茶餐厅', coffee: '咖啡'
 };
 function formatCuisine(tags) {
   if (!tags || !tags.cuisine) return '';
   const raw = (tags.cuisine || '').toLowerCase().split(';')[0].trim();
   return CUISINE_ZH[raw] || raw || '';
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Nominatim 逆地理：经纬度 → 可读地址（需遵守 1 请求/秒，调用方负责间隔） */
+async function nominatimReverse(lat, lon) {
+  try {
+    const url = `${NOMINATIM_URL}?lat=${lat}&lon=${lon}&format=json`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'EatWhat/1.0 (wechat miniapp; contact: ccwevelyncambridge@outlook.com)' },
+    });
+    if (!res.ok) return '';
+    const data = await res.json();
+    return data.display_name || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+/** 对列表前 N 条用 Nominatim 补全可读地址（串行 + 间隔） */
+async function enrichAddressesWithNominatim(list) {
+  const toEnrich = list.slice(0, NOMINATIM_MAX_ITEMS);
+  for (const item of toEnrich) {
+    if (item.lat != null && item.lon != null) {
+      const addr = await nominatimReverse(item.lat, item.lon);
+      if (addr) item.address = addr;
+      await sleep(NOMINATIM_DELAY_MS);
+    }
+  }
+  list.forEach((item) => {
+    delete item.lat;
+    delete item.lon;
+  });
 }
 
 /** 调用 Overpass API（免费，无需 Key），带多节点重试 */
@@ -120,8 +131,8 @@ async function overpassQuery(query) {
   throw new Error(lastErr?.message || 'Overpass API 暂时不可用，请稍后再试');
 }
 
-/** 附近餐厅：范围内餐饮点，按距离排序；空结果时自动扩大范围重试 */
-async function searchNearby(lat, lng, radiusMeters) {
+/** 附近餐厅：范围内餐饮点，按距离排序；空结果时自动扩大范围重试。includeRawTags 为 true 时每项带 rawTags（OSM 原始标签） */
+async function searchNearby(lat, lng, radiusMeters, includeRawTags) {
   let radius = Math.min(50000, Math.max(100, radiusMeters));
   const maxDistKm = radiusMeters / 1000;
   const amenityRegex = '^(restaurant|cafe|fast_food|bar|pub|food_court)$';
@@ -159,14 +170,19 @@ out body center;
     const cuisine = formatCuisine(el.tags);
     list.push({
       name,
-      region: getRegion(el.tags, pos.lat, pos.lon),
-      address: getAddress(el.tags, pos.lat, pos.lon),
+      region: getRegionFromTags(el.tags),
+      address: formatAddress(el.tags),
       distance: dist,
       cuisine: cuisine || undefined,
+      lat: pos.lat,
+      lon: pos.lon,
+      ...(includeRawTags && { rawTags: el.tags || {} }),
     });
   }
   list.sort((a, b) => a.distance - b.distance);
-  return list.slice(0, 30);
+  const out = list.slice(0, 15);
+  await enrichAddressesWithNominatim(out);
+  return out;
 }
 
 /** 菜系关键词 -> OSM cuisine 或名称匹配（用于按菜系筛选）*/
@@ -177,12 +193,13 @@ const CUISINE_MAP = {
   西餐: ['european', 'italian', 'french', '西餐', '西式'],
   粤菜: ['cantonese', '粤', '广东'],
   川菜: ['sichuan', '川', '麻辣'],
-  东南亚: ['thai', 'vietnamese', 'indian', '泰', '越', '东南亚'],
+  东南亚: ['thai', 'vietnamese', '泰', '越', '东南亚'],
+  南亚: ['indian', '印度', '南亚'],
   火锅: ['hot_pot', '火锅', '火鍋'],
 };
 
-/** 按菜系搜索：大范围内取餐饮点，再按菜系关键词/OSM cuisine 筛选，按距离排序 */
-async function searchByCuisine(cuisine, lat, lng) {
+/** 按菜系搜索：大范围内取餐饮点，再按菜系关键词/OSM cuisine 筛选，按距离排序。includeRawTags 为 true 时每项带 rawTags */
+async function searchByCuisine(cuisine, lat, lng, includeRawTags) {
   const radius = 50000;
   const amenityRegex = '^(restaurant|cafe|fast_food|bar|pub|food_court)$';
   const query = `
@@ -211,14 +228,19 @@ out body center;
     const cuisineStr = formatCuisine(el.tags) || cuisine;
     list.push({
       name: displayName,
-      region: getRegion(el.tags, pos.lat, pos.lon),
-      address: getAddress(el.tags, pos.lat, pos.lon),
+      region: getRegionFromTags(el.tags),
+      address: formatAddress(el.tags),
       distance: haversineKm(lat, lng, pos.lat, pos.lon),
       cuisine: cuisineStr,
+      lat: pos.lat,
+      lon: pos.lon,
+      ...(includeRawTags && { rawTags: el.tags || {} }),
     });
   }
   list.sort((a, b) => a.distance - b.distance);
-  return list.slice(0, 30);
+  const out = list.slice(0, 15);
+  await enrichAddressesWithNominatim(out);
+  return out;
 }
 
 const server = http.createServer(async (req, res) => {
@@ -252,7 +274,8 @@ const server = http.createServer(async (req, res) => {
       const lat = parseFloat(params.get('lat')) || MACAU_CENTER.lat;
       const lng = parseFloat(params.get('lng')) || MACAU_CENTER.lng;
       let radius = parseInt(params.get('radius'), 10) || 1000;
-      const list = await searchNearby(lat, lng, radius);
+      const debug = params.get('debug') === '1';
+      const list = await searchNearby(lat, lng, radius, debug);
       send(200, { list });
       return;
     }
@@ -261,7 +284,8 @@ const server = http.createServer(async (req, res) => {
       const cuisine = params.get('cuisine') || '餐厅';
       const lat = parseFloat(params.get('lat')) || MACAU_CENTER.lat;
       const lng = parseFloat(params.get('lng')) || MACAU_CENTER.lng;
-      const list = await searchByCuisine(cuisine, lat, lng);
+      const debug = params.get('debug') === '1';
+      const list = await searchByCuisine(cuisine, lat, lng, debug);
       send(200, { list });
       return;
     }

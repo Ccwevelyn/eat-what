@@ -11,6 +11,7 @@ const CUISINES = [
   { name: '粤菜' },
   { name: '川菜' },
   { name: '东南亚' },
+  { name: '南亚' },
   { name: '火锅' }
 ];
 

@@ -43,10 +43,12 @@
     <text class="result-title">🎲 就是它了</text>
     <text class="result-name">{{ result.name }}</text>
     <text wx:if="{{result.cuisine}}" class="result-cuisine">菜系：{{ result.cuisine }}</text>
-    <text wx:if="{{result.region}}" class="result-address-label">地区</text>
-    <text wx:if="{{result.region}}" class="result-address">{{ result.region }}</text>
-    <text class="result-address-label">详细地址</text>
-    <text class="result-address">{{ result.address || '暂无详细地址' }}</text>
+    <text wx:if="{{result.region && result.region !== '未知'}}" class="result-address-label">地区</text>
+    <text wx:if="{{result.region && result.region !== '未知'}}" class="result-address">{{ result.region }}</text>
+    <block wx:if="{{result.address && result.address !== '未知'}}">
+      <text class="result-address-label">详细地址</text>
+      <text class="result-address">{{ result.address }}</text>
+    </block>
     <text wx:if="{{result.distance}}" class="result-distance">约 {{ result.distance }} km</text>
   </view>
 

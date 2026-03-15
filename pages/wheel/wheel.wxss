@@ -50,7 +50,7 @@
   width: 50%;
   height: 50%;
   transform-origin: 0% 0%;
-  clip-path: polygon(0 0, 100% 0, 70.7% 70.7%);
+  clip-path: polygon(0 0, 100% 0, 76.6% 64.3%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -60,13 +60,14 @@
 }
 
 .segment-0 { transform: rotate(0deg); background: #6B4EAA; }
-.segment-1 { transform: rotate(45deg); background: #7C5CBF; }
-.segment-2 { transform: rotate(90deg); background: #8B6FC7; }
-.segment-3 { transform: rotate(135deg); background: #6B4EAA; }
-.segment-4 { transform: rotate(180deg); background: #5A3D99; }
-.segment-5 { transform: rotate(225deg); background: #7C5CBF; }
-.segment-6 { transform: rotate(270deg); background: #8B6FC7; }
-.segment-7 { transform: rotate(315deg); background: #5A3D99; }
+.segment-1 { transform: rotate(40deg); background: #7C5CBF; }
+.segment-2 { transform: rotate(80deg); background: #8B6FC7; }
+.segment-3 { transform: rotate(120deg); background: #6B4EAA; }
+.segment-4 { transform: rotate(160deg); background: #5A3D99; }
+.segment-5 { transform: rotate(200deg); background: #7C5CBF; }
+.segment-6 { transform: rotate(240deg); background: #8B6FC7; }
+.segment-7 { transform: rotate(280deg); background: #5A3D99; }
+.segment-8 { transform: rotate(320deg); background: #6B4EAA; }
 
 .segment-text {
   font-size: 26rpx;
@@ -77,14 +78,15 @@
   font-family: "YouYuan", "幼圆", "华文圆体", sans-serif;
 }
 
-.segment-0 .segment-text { transform: rotate(-22.5deg); }
-.segment-1 .segment-text { transform: rotate(-67.5deg); }
-.segment-2 .segment-text { transform: rotate(-112.5deg); }
-.segment-3 .segment-text { transform: rotate(-157.5deg); }
-.segment-4 .segment-text { transform: rotate(-202.5deg); }
-.segment-5 .segment-text { transform: rotate(-247.5deg); }
-.segment-6 .segment-text { transform: rotate(-292.5deg); }
-.segment-7 .segment-text { transform: rotate(-337.5deg); }
+.segment-0 .segment-text { transform: rotate(-20deg); }
+.segment-1 .segment-text { transform: rotate(-60deg); }
+.segment-2 .segment-text { transform: rotate(-100deg); }
+.segment-3 .segment-text { transform: rotate(-140deg); }
+.segment-4 .segment-text { transform: rotate(-180deg); }
+.segment-5 .segment-text { transform: rotate(-220deg); }
+.segment-6 .segment-text { transform: rotate(-260deg); }
+.segment-7 .segment-text { transform: rotate(-300deg); }
+.segment-8 .segment-text { transform: rotate(-340deg); }
 
 .wheel-center {
   position: absolute;
