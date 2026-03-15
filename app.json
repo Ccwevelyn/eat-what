@@ -24,9 +24,12 @@
   },
   "permission": {
     "scope.userLocation": {
-      "desc": "用于获取附近餐厅推荐"
+      "desc": "用于获取您的位置并推荐附近餐厅"
     }
   },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
   "sitemapLocation": "sitemap.json",
   "style": "v2"
 }

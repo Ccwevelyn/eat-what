@@ -1,7 +1,6 @@
 /**
  * 今天吃啥 - 后端（完全免费，无需 API Key）
- * 使用 OpenStreetMap Overpass API 获取餐厅，用返回的经纬度计算距离。
- * 面向澳门发布；数据来自 OSM，不收费。
+ * 使用 OpenStreetMap Overpass API 根据用户位置获取附近餐厅，地址与地区来自 OSM 数据。
  */
 
 const http = require('http');
@@ -39,22 +38,23 @@ function getLatLon(el) {
   return null;
 }
 
-/** 按纬度区分本岛 / 氹仔（澳门半岛约 lat>22.17，氹仔约 lat<=22.17） */
-function areaName(lat) {
-  if (lat == null) return '本岛';
-  return lat <= 22.17 ? '氹仔' : '本岛';
+/** 从 OSM tags 取地区（城市/区/街道等），不限定澳门/珠海 */
+function getRegion(tags) {
+  if (!tags) return '';
+  return tags['addr:city'] || tags['addr:suburb'] || tags['addr:district'] || tags['addr:state'] || tags['addr:province'] || '';
 }
 
-/** 从 tags 拼详细地址，带本岛/氹仔 */
-function formatAddress(tags, lat, lon) {
-  const area = areaName(lat);
-  if (!tags) return area;
+/** 从 tags 拼详细地址（通用，用 OSM 的 addr:*） */
+function formatAddress(tags) {
+  if (!tags) return '';
   const full = tags['addr:full'];
-  const street = tags['addr:street'];
-  const num = tags['addr:housenumber'];
-  if (full) return area + ' ' + full;
-  if (street) return num ? area + ' ' + street + ' ' + num : area + ' ' + street;
-  return area;
+  if (full) return full;
+  const city = tags['addr:city'] || '';
+  const suburb = tags['addr:suburb'] || '';
+  const street = tags['addr:street'] || '';
+  const num = tags['addr:housenumber'] || '';
+  const parts = [city, suburb, street, num].filter(Boolean);
+  return parts.join(' ') || '';
 }
 
 /** OSM cuisine 英文 -> 中文菜系 */
@@ -133,7 +133,8 @@ out body center;
     const cuisine = formatCuisine(el.tags);
     list.push({
       name,
-      address: formatAddress(el.tags, pos.lat, pos.lon),
+      region: getRegion(el.tags),
+      address: formatAddress(el.tags),
       distance: dist,
       cuisine: cuisine || undefined,
     });
@@ -184,7 +185,8 @@ out body center;
     const cuisineStr = formatCuisine(el.tags) || cuisine;
     list.push({
       name: displayName,
-      address: formatAddress(el.tags, pos.lat, pos.lon),
+      region: getRegion(el.tags),
+      address: formatAddress(el.tags),
       distance: haversineKm(lat, lng, pos.lat, pos.lon),
       cuisine: cuisineStr,
     });

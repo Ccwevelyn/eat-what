@@ -5,9 +5,18 @@ const api = require('../../utils/api.js');
 Page({
   data: {
     hasLocation: false,
-    locationAuthorized: false, // 是否已在系统设置中开启位置权限
+    locationAuthorized: false,
+    locationLabel: '', // 当前定位：珠海 / 澳门，用于核对
     distance: 2,
     result: null
+  },
+
+  /** 根据经纬度判断大致在珠海还是澳门（仅用于显示） */
+  getLocationLabel(lat, lng) {
+    if (lat == null || lng == null) return '';
+    if (lat >= 22.14 && lat <= 22.22 && lng >= 113.52 && lng <= 113.60) return '澳门';
+    if (lat >= 22.0 && lat <= 22.6 && lng >= 113.0 && lng <= 114.0) return '珠海';
+    return '当前定位';
   },
 
   onLoad() {
@@ -35,10 +44,13 @@ Page({
         success: (res) => {
           if (!res || !res.authSetting) return;
           var auth = res.authSetting['scope.userLocation'];
-          var hasLocation = !!(app && app.globalData && app.globalData.location);
+          var loc = app && app.globalData && app.globalData.location;
+          var hasLocation = !!loc;
+          var label = hasLocation ? this.getLocationLabel(loc.latitude, loc.longitude) : '';
           this.setData({
             locationAuthorized: auth === true,
             hasLocation: hasLocation,
+            locationLabel: label,
           });
           if (auth === true && !hasLocation) this.requestLocation();
         },
@@ -54,7 +66,8 @@ Page({
       type: 'gcj02',
       success: (res) => {
         app.globalData.location = { latitude: res.latitude, longitude: res.longitude };
-        this.setData({ hasLocation: true, locationAuthorized: true });
+        var label = this.getLocationLabel(res.latitude, res.longitude);
+        this.setData({ hasLocation: true, locationAuthorized: true, locationLabel: label });
         wx.showToast({ title: '定位成功', icon: 'success' });
       },
       fail: (err) => {
@@ -78,7 +91,7 @@ Page({
   onRandomTap() {
     const { distance } = this.data;
     const radiusMeters = Math.round(distance * 1000);
-    const location = app.globalData.location;
+    var location = app.globalData.location;
 
     if (!location) {
       wx.showToast({ title: '请先开启定位', icon: 'none' });
@@ -87,9 +100,16 @@ Page({
 
     wx.showLoading({ title: '抽签中…' });
 
-    const fetchList = api.useRealApi()
-      ? api.getNearbyRestaurants(location.latitude, location.longitude, radiusMeters)
-      : api.getMockNearbyRestaurants(parseFloat(distance));
+    var self = this;
+    function doFetch() {
+      var loc = app.globalData.location;
+      if (!loc) return Promise.reject(new Error('请先开启定位'));
+      return api.useRealApi()
+        ? api.getNearbyRestaurants(loc.latitude, loc.longitude, radiusMeters)
+        : api.getMockNearbyRestaurants(parseFloat(distance));
+    }
+
+    doFetch();
 
     fetchList.then(list => {
         wx.hideLoading();
