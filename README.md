@@ -6,7 +6,7 @@
 
 ## 功能
 
-- **附近随机**：开启定位 → 选择 1–5 km 范围 → 随机推荐一家餐厅，显示详细地址（高德逆地理）
+- **附近随机**：开启定位 → 选择 1–5 km 范围 → 随机推荐一家餐厅，显示详细地址（高德 POI）
 - **菜系转盘**：九格转盘（茶餐厅 / 韩餐 / 日料 / 西餐 / 粤菜 / 川菜 / 东南亚 / 南亚 / 火锅），转出菜系后列出该菜系附近餐厅
 - **声明页**：数据来源、非营利说明、鸣谢、免责、联系邮箱
 - **中 / EN**：右上角语言切换，声明页与主要文案支持中英对照
@@ -18,7 +18,7 @@
 | 端     | 说明 |
 |--------|------|
 | 小程序 | 微信小程序原生（WXML / WXSS / JS），自定义 TabBar |
-| 后端   | Node.js，Overpass API（OSM）查餐厅 + **高德逆地理** 转可读地址 |
+| 后端   | Node.js，**高德周边搜索** POI（餐厅列表与地址一体，内地+澳门） |
 | 部署   | 后端可部署至 [Render](https://render.com/) 等，小程序在微信公众平台发布 |
 
 ---
@@ -33,7 +33,7 @@ EatWhat/
 │   ├── api.js                # 附近 / 菜系接口封装
 │   └── i18n.js               # 中英文案
 ├── server/                   # 后端（需部署）
-│   ├── index.js              # /api/nearby、/api/cuisine，Overpass + 高德逆地理
+│   ├── index.js              # /api/nearby、/api/cuisine，高德周边搜索 POI
 │   └── package.json
 ├── custom-tab-bar/           # 底部导航
 └── pages/
@@ -63,7 +63,7 @@ git clone https://github.com/Ccwevelyn/eat-what.git
 ### 3. 后端部署（含高德 Key）
 
 - 部署 `server/` 到任意 Node 环境（如 Render：Root Directory 填 `server`，Start Command 填 `node index.js`）。
-- **详细地址** 依赖高德逆地理，需在后端环境变量中配置 **AMAP_KEY**（[高德开放平台](https://lbs.amap.com/) 申请 Web 服务 Key）。
+- 餐厅与地址均来自 **高德 Web 服务**，需在后端环境变量中配置 **AMAP_KEY**（[高德开放平台](https://lbs.amap.com/) 申请 Web 服务 Key）。
 
 ### 4. 真机预览与发布
 
@@ -77,9 +77,9 @@ git clone https://github.com/Ccwevelyn/eat-what.git
 | 配置项    | 说明 |
 |-----------|------|
 | `config.API_BASE` | 后端接口基础地址，如 `https://xxx.onrender.com/api` |
-| 后端 `AMAP_KEY`   | 高德 Web 服务 Key，用于逆地理得到可读地址（内地+澳门） |
+| 后端 `AMAP_KEY`   | 高德 Web 服务 Key，用于周边搜索 POI（餐厅+地址，内地+澳门） |
 
-未配置 `AMAP_KEY` 时，接口仍返回餐厅列表，但详细地址可能为空。
+未配置 `AMAP_KEY` 时，接口返回空列表。
 
 ---
 
@@ -93,6 +93,6 @@ git clone https://github.com/Ccwevelyn/eat-what.git
 
 ## 致谢与联系
 
-- 数据： [OpenStreetMap](https://www.openstreetmap.org/)（Overpass API）+ 高德逆地理
+- 数据： [高德开放平台](https://lbs.amap.com/) 周边搜索 POI
 - 特别鸣谢：陈小姐 / Ava（灵感来源）
 - 联系：ccwevelyncambridge@outlook.com
