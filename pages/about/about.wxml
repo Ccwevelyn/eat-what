@@ -26,8 +26,4 @@
     <text class="email" selectable>ccwevelyncambridge@outlook.com</text>
   </view>
 
-  <view class="nav-links">
-    <navigator url="/pages/index/index" class="link">附近随机</navigator>
-    <navigator url="/pages/wheel/wheel" class="link">菜系转盘</navigator>
-  </view>
 </view>

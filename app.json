@@ -6,9 +6,21 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#FF6B35",
+    "navigationBarBackgroundColor": "#6B4EAA",
     "navigationBarTitleText": "今天吃啥",
     "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#999",
+    "selectedColor": "#6B4EAA",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "附近随机" },
+      { "pagePath": "pages/wheel/wheel", "text": "菜系转盘" },
+      { "pagePath": "pages/about/about", "text": "声明" }
+    ]
   },
   "permission": {
     "scope.userLocation": {

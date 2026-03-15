@@ -2,7 +2,7 @@
 .container {
   padding: 32rpx;
   min-height: 100vh;
-  padding-bottom: 60rpx;
+  padding-bottom: 120rpx;
 }
 
 .section {
@@ -20,7 +20,7 @@
   display: block;
   font-size: 30rpx;
   font-weight: 700;
-  color: #FF6B35;
+  color: #6B4EAA;
   margin-bottom: 16rpx;
 }
 
@@ -44,18 +44,6 @@
   display: block;
   margin-top: 12rpx;
   font-size: 28rpx;
-  color: #FF6B35;
+  color: #6B4EAA;
   word-break: break-all;
-}
-
-.nav-links {
-  margin-top: 48rpx;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24rpx;
-}
-
-.link {
-  color: #FF6B35;
-  font-size: 28rpx;
 }

@@ -4,11 +4,14 @@
     <view class="pointer">▼</view>
     <view class="wheel-outer" style="transform: rotate({{ wheelRotation }}deg);">
       <view class="wheel-inner">
-        <block wx:for="{{ cuisines }}" wx:key="name">
-          <view class="segment" style="--i: {{ index }}; --total: {{ cuisines.length }};">
-            <text class="segment-text">{{ item.name }}</text>
-          </view>
-        </block>
+        <view class="segment segment-0"><text class="segment-text">茶餐厅</text></view>
+        <view class="segment segment-1"><text class="segment-text">韩餐</text></view>
+        <view class="segment segment-2"><text class="segment-text">日料</text></view>
+        <view class="segment segment-3"><text class="segment-text">西餐</text></view>
+        <view class="segment segment-4"><text class="segment-text">粤菜</text></view>
+        <view class="segment segment-5"><text class="segment-text">川菜</text></view>
+        <view class="segment segment-6"><text class="segment-text">东南亚</text></view>
+        <view class="segment segment-7"><text class="segment-text">火锅</text></view>
       </view>
     </view>
     <view class="wheel-center" bindtap="onSpinTap">
@@ -28,8 +31,4 @@
     </view>
   </view>
 
-  <view class="nav-links">
-    <navigator url="/pages/index/index" class="link">← 附近随机</navigator>
-    <navigator url="/pages/about/about" class="link">关于与声明</navigator>
-  </view>
 </view>

@@ -23,6 +23,11 @@ Page({
     restaurantList: []
   },
 
+  onShow() {
+    const tabBar = this.getTabBar && this.getTabBar();
+    if (tabBar) tabBar.setData({ selected: 1 });
+  },
+
   onSpinTap() {
     if (this.data.spinning) return;
     const { cuisines } = this.data;

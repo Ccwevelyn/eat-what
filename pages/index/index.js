@@ -6,7 +6,7 @@ Page({
   data: {
     hasLocation: false,
     locationAuthorized: false, // 是否已在系统设置中开启位置权限
-    distance: 1,
+    distance: 2,
     result: null
   },
 
@@ -15,7 +15,8 @@ Page({
   },
 
   onShow() {
-    // 从设置页返回时重新检查
+    const tabBar = this.getTabBar && this.getTabBar();
+    if (tabBar) tabBar.setData({ selected: 0 });
     this.checkLocationStatus();
   },
 
@@ -59,8 +60,8 @@ Page({
   },
 
   onDistanceChange(e) {
-    const distance = e.detail.value;
-    this.setData({ distance });
+    const raw = parseFloat(e.detail.value);
+    this.setData({ distance: Math.round(raw * 10) / 10 });
   },
 
   onRandomTap() {

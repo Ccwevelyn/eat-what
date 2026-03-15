@@ -1,0 +1,16 @@
+<view class="tab-bar">
+  <view
+    wx:for="{{ list }}"
+    wx:key="pagePath"
+    class="tab-item {{ selected === index ? 'active' : '' }}"
+    data-path="{{ item.pagePath }}"
+    bindtap="switchTab"
+  >
+    <view class="icon-wrap">
+      <view wx:if="{{ item.icon === 'circle' }}" class="shape shape-circle"></view>
+      <view wx:elif="{{ item.icon === 'triangle' }}" class="shape shape-triangle"></view>
+      <view wx:else class="shape shape-diamond"></view>
+    </view>
+    <text class="tab-text">{{ item.text }}</text>
+  </view>
+</view>

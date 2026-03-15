@@ -14,22 +14,20 @@
   <view class="section card">
     <text class="title">选择可接受的距离</text>
     <view class="slider-wrap">
-      <text class="slider-label">0 km</text>
+      <text class="slider-label">1 km</text>
       <slider
         class="slider"
-        min="0"
-        max="2"
-        step="0.2"
+        min="1"
+        max="5"
+        step="0.1"
         value="{{distance}}"
-        activeColor="#FF6B35"
+        activeColor="#6B4EAA"
         backgroundColor="#eee"
         block-size="24"
-        show-value
         bindchange="onDistanceChange"
       />
-      <text class="slider-label">2 km</text>
+      <text class="slider-label">5 km</text>
     </view>
-    <text class="distance-text">当前：{{ distance }} km 以内</text>
   </view>
 
   <view class="section card">
@@ -43,8 +41,4 @@
     <text wx:if="{{result.distance}}" class="result-distance">约 {{ result.distance }} km</text>
   </view>
 
-  <view class="nav-links">
-    <navigator url="/pages/wheel/wheel" class="link">去菜系转盘 →</navigator>
-    <navigator url="/pages/about/about" class="link">关于与声明</navigator>
-  </view>
 </view>

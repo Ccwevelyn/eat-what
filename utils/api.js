@@ -22,13 +22,14 @@ function getNearbyRestaurants(lat, lng, radiusMeters) {
       method: 'GET',
       data: { lat, lng, radius: radiusMeters },
       success(res) {
-        if (res.statusCode === 200 && res.data && res.data.list) {
-          resolve(res.data.list);
+        if (res.statusCode === 200) {
+          const list = (res.data && res.data.list) ? res.data.list : [];
+          resolve(Array.isArray(list) ? list : []);
         } else {
           reject(new Error(res.data?.message || '获取餐厅失败'));
         }
       },
-      fail: reject
+      fail: (err) => reject(err || new Error('网络请求失败'))
     });
   });
 }
@@ -46,13 +47,14 @@ function getRestaurantsByCuisine(cuisine, lat, lng) {
       method: 'GET',
       data: { cuisine, lat, lng },
       success(res) {
-        if (res.statusCode === 200 && res.data && res.data.list) {
-          resolve(res.data.list);
+        if (res.statusCode === 200) {
+          const list = (res.data && res.data.list) ? res.data.list : [];
+          resolve(Array.isArray(list) ? list : []);
         } else {
           reject(new Error(res.data?.message || '获取餐厅失败'));
         }
       },
-      fail: reject
+      fail: (err) => reject(err || new Error('网络请求失败'))
     });
   });
 }
@@ -66,9 +68,12 @@ function getMockNearbyRestaurants(radiusKm) {
     { name: '黄枝记', address: '澳门议事亭前地', distance: 0.8 },
     { name: '玛嘉烈蛋挞', address: '澳门马统领街', distance: 1.2 },
     { name: '陈光记烧腊', address: '澳门罗保博士街', distance: 1.5 },
-    { name: '义顺牛奶', address: '澳门新马路', distance: 1.8 }
+    { name: '义顺牛奶', address: '澳门新马路', distance: 1.8 },
+    { name: '新武二', address: '澳门氹仔', distance: 2.5 },
+    { name: '船屋', address: '澳门妈阁', distance: 3.2 },
+    { name: '龙华茶楼', address: '澳门提督市北街', distance: 4.1 }
   ].filter(p => p.distance <= radiusKm);
-  return Promise.resolve(mockList.length ? mockList : [mockList[0]]);
+  return Promise.resolve(mockList.length ? mockList : mockList.concat([{ name: '模拟餐厅', address: '澳门', distance: radiusKm }]));
 }
 
 function getMockRestaurantsByCuisine(cuisine) {

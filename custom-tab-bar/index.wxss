@@ -1,0 +1,74 @@
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100rpx;
+  background: #fff;
+  display: flex;
+  border-top: 1rpx solid #eee;
+  z-index: 9999;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-wrap {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4rpx;
+}
+
+.shape {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.shape-circle {
+  border-radius: 50%;
+  background: #c0c0c0;
+}
+
+.tab-item.active .shape-circle {
+  background: #5B8DEE;
+}
+
+.shape-triangle {
+  width: 0;
+  height: 0;
+  background: transparent;
+  border-left: 16rpx solid transparent;
+  border-right: 16rpx solid transparent;
+  border-bottom: 28rpx solid #c0c0c0;
+}
+
+.tab-item.active .shape-triangle {
+  border-bottom-color: #6B4EAA;
+}
+
+.shape-diamond {
+  transform: rotate(45deg);
+  background: #c0c0c0;
+}
+
+.tab-item.active .shape-diamond {
+  background: #E8A87C;
+}
+
+.tab-text {
+  font-size: 20rpx;
+  color: #999;
+  font-family: "KaiTi", "楷体", serif;
+}
+
+.tab-item.active .tab-text {
+  color: #6B4EAA;
+}
