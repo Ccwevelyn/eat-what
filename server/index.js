@@ -39,15 +39,35 @@ function getLatLon(el) {
   return null;
 }
 
-/** 从 tags 拼地址 */
-function formatAddress(tags) {
-  if (!tags) return '澳门';
-  const a = tags['addr:full'] || tags['addr:street'];
-  if (a) {
-    const num = tags['addr:housenumber'];
-    return num ? `${a} ${num}` : a;
-  }
-  return tags['addr:street'] || '澳门';
+/** 按纬度区分本岛 / 氹仔（澳门半岛约 lat>22.17，氹仔约 lat<=22.17） */
+function areaName(lat) {
+  if (lat == null) return '本岛';
+  return lat <= 22.17 ? '氹仔' : '本岛';
+}
+
+/** 从 tags 拼详细地址，带本岛/氹仔 */
+function formatAddress(tags, lat, lon) {
+  const area = areaName(lat);
+  if (!tags) return area;
+  const full = tags['addr:full'];
+  const street = tags['addr:street'];
+  const num = tags['addr:housenumber'];
+  if (full) return area + ' ' + full;
+  if (street) return num ? area + ' ' + street + ' ' + num : area + ' ' + street;
+  return area;
+}
+
+/** OSM cuisine 英文 -> 中文菜系 */
+const CUISINE_ZH = {
+  cantonese: '粤菜', chinese: '中餐', japanese: '日料', korean: '韩餐',
+  italian: '西餐', french: '西餐', european: '西餐', american: '西餐',
+  thai: '东南亚', vietnamese: '东南亚', indian: '东南亚',
+  sichuan: '川菜', hot_pot: '火锅', tea: '茶餐厅', coffee: '咖啡'
+};
+function formatCuisine(tags) {
+  if (!tags || !tags.cuisine) return '';
+  const raw = (tags.cuisine || '').toLowerCase().split(';')[0].trim();
+  return CUISINE_ZH[raw] || raw || '';
 }
 
 /** 调用 Overpass API（免费，无需 Key），带多节点重试 */
@@ -110,10 +130,12 @@ out body center;
     const dist = haversineKm(lat, lng, pos.lat, pos.lon);
     if (!useFallback && dist > maxDistKm) continue;
     const name = el.tags?.name || el.tags?.brand || '未知';
+    const cuisine = formatCuisine(el.tags);
     list.push({
       name,
-      address: formatAddress(el.tags),
+      address: formatAddress(el.tags, pos.lat, pos.lon),
       distance: dist,
+      cuisine: cuisine || undefined,
     });
   }
   list.sort((a, b) => a.distance - b.distance);
@@ -159,10 +181,12 @@ out body center;
       keywords.length === 0 ||
       keywords.some((k) => name.includes(k) || cuisineTag.includes(k) || (displayName && displayName.toLowerCase().includes(k)));
     if (!match) continue;
+    const cuisineStr = formatCuisine(el.tags) || cuisine;
     list.push({
       name: displayName,
-      address: formatAddress(el.tags),
+      address: formatAddress(el.tags, pos.lat, pos.lon),
       distance: haversineKm(lat, lng, pos.lat, pos.lon),
+      cuisine: cuisineStr,
     });
   }
   list.sort((a, b) => a.distance - b.distance);

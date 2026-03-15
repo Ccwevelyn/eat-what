@@ -23,8 +23,10 @@
     <text class="cuisine-title">今日菜系：{{ selectedCuisine }}</text>
     <text class="cuisine-desc">以下为该菜系餐厅（由近到远）</text>
     <view class="restaurant-list">
-      <view class="rest-item" wx:for="{{ restaurantList }}" wx:key="name">
+      <view class="rest-item" wx:for="{{ restaurantList }}" wx:key="name" wx:if="{{ item.name !== '未知' }}">
         <text class="rest-name">{{ item.name }}</text>
+        <text wx:if="{{ item.cuisine }}" class="rest-cuisine">菜系：{{ item.cuisine }}</text>
+        <text class="rest-address-label">详细位置</text>
         <text class="rest-address">{{ item.address }}</text>
         <text class="rest-distance">约 {{ item.distance }} km</text>
       </view>

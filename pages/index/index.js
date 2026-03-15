@@ -11,31 +11,42 @@ Page({
   },
 
   onLoad() {
-    this.checkLocationStatus();
+    try {
+      this.checkLocationStatus();
+    } catch (e) {
+      console.error('index onLoad', e);
+    }
   },
 
   onShow() {
-    const tabBar = this.getTabBar && this.getTabBar();
-    if (tabBar) tabBar.setData({ selected: 0 });
-    this.checkLocationStatus();
+    try {
+      var tabBar = this.getTabBar && this.getTabBar();
+      if (tabBar && typeof tabBar.setData === 'function') tabBar.setData({ selected: 0 });
+      this.checkLocationStatus();
+    } catch (e) {
+      console.error('index onShow', e);
+    }
   },
 
   /** 检查是否已开启位置权限、是否有位置数据 */
   checkLocationStatus() {
-    wx.getSetting({
-      success: (res) => {
-        const auth = res.authSetting['scope.userLocation'];
-        const hasLocation = !!app.globalData.location;
-        this.setData({
-          locationAuthorized: auth === true,
-          hasLocation: hasLocation,
-        });
-        // 已授权但还没拿到坐标时，自动请求一次
-        if (auth === true && !hasLocation) {
-          this.requestLocation();
-        }
-      },
-    });
+    try {
+      wx.getSetting({
+        success: (res) => {
+          if (!res || !res.authSetting) return;
+          var auth = res.authSetting['scope.userLocation'];
+          var hasLocation = !!(app && app.globalData && app.globalData.location);
+          this.setData({
+            locationAuthorized: auth === true,
+            hasLocation: hasLocation,
+          });
+          if (auth === true && !hasLocation) this.requestLocation();
+        },
+        fail: function() {}
+      });
+    } catch (e) {
+      console.error('checkLocationStatus', e);
+    }
   },
 
   requestLocation() {
@@ -86,9 +97,14 @@ Page({
           wx.showToast({ title: '该范围内暂无餐厅', icon: 'none' });
           return;
         }
-        const randomIndex = Math.floor(Math.random() * list.length);
-        const result = list[randomIndex];
-        this.setData({ result });
+        var valid = list.filter(function (item) { return item.name && item.name !== '未知'; });
+        if (valid.length === 0) {
+          wx.showToast({ title: '该范围内暂无餐厅', icon: 'none' });
+          return;
+        }
+        var randomIndex = Math.floor(Math.random() * valid.length);
+        var result = valid[randomIndex];
+        this.setData({ result: result });
         wx.showToast({ title: '选好啦', icon: 'success' });
       })
       .catch(() => {

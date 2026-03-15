@@ -24,8 +24,10 @@ Page({
   },
 
   onShow() {
-    const tabBar = this.getTabBar && this.getTabBar();
-    if (tabBar) tabBar.setData({ selected: 1 });
+    try {
+      var tabBar = this.getTabBar && this.getTabBar();
+      if (tabBar && typeof tabBar.setData === 'function') tabBar.setData({ selected: 1 });
+    } catch (e) {}
   },
 
   onSpinTap() {
@@ -58,7 +60,10 @@ Page({
       : api.getMockRestaurantsByCuisine(cuisine);
     fetchList.then(list => {
         wx.hideLoading();
-        this.setData({ restaurantList: list });
+        var withCuisine = (list || []).map(function (item) {
+          return Object.assign({}, item, { cuisine: item.cuisine || cuisine });
+        });
+        this.setData({ restaurantList: withCuisine });
       })
       .catch(() => {
         wx.hideLoading();

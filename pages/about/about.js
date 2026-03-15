@@ -3,7 +3,9 @@ Page({
   data: {},
   onLoad() {},
   onShow() {
-    const tabBar = this.getTabBar && this.getTabBar();
-    if (tabBar) tabBar.setData({ selected: 2 });
+    try {
+      var tabBar = this.getTabBar && this.getTabBar();
+      if (tabBar && typeof tabBar.setData === 'function') tabBar.setData({ selected: 2 });
+    } catch (e) {}
   }
 });

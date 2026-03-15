@@ -66,7 +66,7 @@
 .tab-text {
   font-size: 20rpx;
   color: #999;
-  font-family: "KaiTi", "楷体", serif;
+  font-family: "YouYuan", "幼圆", "华文圆体", sans-serif;
 }
 
 .tab-item.active .tab-text {

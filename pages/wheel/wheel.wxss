@@ -74,7 +74,7 @@
   color: #fff;
   text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.5);
   white-space: nowrap;
-  font-family: "KaiTi", "楷体", serif;
+  font-family: "YouYuan", "幼圆", "华文圆体", sans-serif;
 }
 
 .segment-0 .segment-text { transform: rotate(-22.5deg); }
@@ -151,11 +151,25 @@
   color: #333;
 }
 
+.rest-cuisine {
+  display: block;
+  font-size: 24rpx;
+  color: #6B4EAA;
+  margin-top: 4rpx;
+}
+
+.rest-address-label {
+  display: block;
+  font-size: 22rpx;
+  color: #666;
+  margin-top: 6rpx;
+}
+
 .rest-address, .rest-distance {
   display: block;
   font-size: 24rpx;
-  color: #666;
-  margin-top: 6rpx;
+  color: #333;
+  margin-top: 4rpx;
 }
 
 .nav-links {

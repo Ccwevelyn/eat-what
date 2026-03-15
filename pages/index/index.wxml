@@ -28,6 +28,7 @@
       />
       <text class="slider-label">5 km</text>
     </view>
+    <text class="distance-hint">将在 {{ distance }} km 内进行随机选择</text>
   </view>
 
   <view class="section card">
@@ -37,6 +38,8 @@
   <view wx:if="{{result}}" class="section card result">
     <text class="result-title">🎲 就是它了</text>
     <text class="result-name">{{ result.name }}</text>
+    <text wx:if="{{result.cuisine}}" class="result-cuisine">菜系：{{ result.cuisine }}</text>
+    <text class="result-address-label">详细位置</text>
     <text class="result-address">{{ result.address }}</text>
     <text wx:if="{{result.distance}}" class="result-distance">约 {{ result.distance }} km</text>
   </view>

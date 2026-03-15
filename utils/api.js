@@ -64,16 +64,19 @@ function getRestaurantsByCuisine(cuisine, lat, lng) {
  */
 function getMockNearbyRestaurants(radiusKm) {
   const mockList = [
-    { name: '大利来记猪扒包', address: '澳门氹仔巴波沙总督街', distance: 0.3 },
-    { name: '黄枝记', address: '澳门议事亭前地', distance: 0.8 },
-    { name: '玛嘉烈蛋挞', address: '澳门马统领街', distance: 1.2 },
-    { name: '陈光记烧腊', address: '澳门罗保博士街', distance: 1.5 },
-    { name: '义顺牛奶', address: '澳门新马路', distance: 1.8 },
-    { name: '新武二', address: '澳门氹仔', distance: 2.5 },
-    { name: '船屋', address: '澳门妈阁', distance: 3.2 },
-    { name: '龙华茶楼', address: '澳门提督市北街', distance: 4.1 }
+    { name: '大利来记猪扒包', address: '氹仔 巴波沙总督街 18 号', distance: 0.3, cuisine: '茶餐厅' },
+    { name: '黄枝记', address: '本岛 议事亭前地 17 号', distance: 0.8, cuisine: '粤菜' },
+    { name: '玛嘉烈蛋挞', address: '本岛 马统领街 17 号', distance: 1.2, cuisine: '茶餐厅' },
+    { name: '陈光记烧腊', address: '本岛 罗保博士街 19 号', distance: 1.5, cuisine: '粤菜' },
+    { name: '义顺牛奶', address: '本岛 新马路 381 号', distance: 1.8, cuisine: '茶餐厅' },
+    { name: '新武二', address: '氹仔 官也街 23 号', distance: 2.5, cuisine: '日料' },
+    { name: '船屋', address: '本岛 妈阁河边新街 289 号', distance: 3.2, cuisine: '西餐' },
+    { name: '龙华茶楼', address: '本岛 提督市北街 3 号', distance: 4.1, cuisine: '粤菜' }
   ].filter(p => p.distance <= radiusKm);
-  return Promise.resolve(mockList.length ? mockList : mockList.concat([{ name: '模拟餐厅', address: '澳门', distance: radiusKm }]));
+  if (mockList.length === 0) {
+    return Promise.resolve([{ name: '模拟餐厅', address: '本岛 某街 1 号', distance: radiusKm, cuisine: '粤菜' }]);
+  }
+  return Promise.resolve(mockList);
 }
 
 function getMockRestaurantsByCuisine(cuisine) {
@@ -86,10 +89,13 @@ function getMockRestaurantsByCuisine(cuisine) {
     '川菜': ['蜀道', '麻辣诱惑', '川小馆'],
     '东南亚': ['金利丰', '暹罗象', '越南河']
   };
+  const areas = ['本岛', '氹仔'];
+  const streets = ['官也街', '新马路', '议事亭前地', '巴波沙总督街', '罗保博士街', '马统领街', '提督市北街', '妈阁街'];
   const list = (names[cuisine] || ['随机餐厅']).map((name, i) => ({
     name,
-    address: `澳门某区 ${cuisine} ${i + 1} 号`,
-    distance: (i + 1) * 0.5
+    address: areas[i % 2] + ' ' + streets[i % streets.length] + ' ' + (i + 1) + ' 号',
+    distance: (i + 1) * 0.5,
+    cuisine: cuisine
   }));
   return Promise.resolve(list);
 }
