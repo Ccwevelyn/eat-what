@@ -52,6 +52,17 @@
   color: #999;
 }
 
+.location-status {
+  margin-bottom: 16rpx;
+}
+.status-on {
+  color: #52c41a;
+  font-size: 28rpx;
+}
+.status-off {
+  color: #999;
+  font-size: 28rpx;
+}
 .location-ok {
   color: #52c41a;
   font-size: 28rpx;

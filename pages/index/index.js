@@ -5,14 +5,36 @@ const api = require('../../utils/api.js');
 Page({
   data: {
     hasLocation: false,
+    locationAuthorized: false, // 是否已在系统设置中开启位置权限
     distance: 1,
     result: null
   },
 
   onLoad() {
-    if (app.globalData.location) {
-      this.setData({ hasLocation: true });
-    }
+    this.checkLocationStatus();
+  },
+
+  onShow() {
+    // 从设置页返回时重新检查
+    this.checkLocationStatus();
+  },
+
+  /** 检查是否已开启位置权限、是否有位置数据 */
+  checkLocationStatus() {
+    wx.getSetting({
+      success: (res) => {
+        const auth = res.authSetting['scope.userLocation'];
+        const hasLocation = !!app.globalData.location;
+        this.setData({
+          locationAuthorized: auth === true,
+          hasLocation: hasLocation,
+        });
+        // 已授权但还没拿到坐标时，自动请求一次
+        if (auth === true && !hasLocation) {
+          this.requestLocation();
+        }
+      },
+    });
   },
 
   requestLocation() {
@@ -20,7 +42,7 @@ Page({
       type: 'gcj02',
       success: (res) => {
         app.globalData.location = { latitude: res.latitude, longitude: res.longitude };
-        this.setData({ hasLocation: true });
+        this.setData({ hasLocation: true, locationAuthorized: true });
         wx.showToast({ title: '定位成功', icon: 'success' });
       },
       fail: (err) => {

@@ -1,10 +1,14 @@
 <!--pages/index/index.wxml - 第一页：附近随机餐厅 -->
 <view class="container">
   <view class="section card">
-    <text class="title">📍 允许获取位置</text>
+    <text class="title">📍 位置权限</text>
     <text class="desc">用于在您选择的距离范围内推荐附近餐厅</text>
+    <view class="location-status">
+      <text wx:if="{{locationAuthorized}}" class="status-on">已开启位置共享</text>
+      <text wx:else class="status-off">未开启位置共享</text>
+    </view>
     <button wx:if="{{!hasLocation}}" class="btn primary" bindtap="requestLocation">开启定位</button>
-    <text wx:else class="location-ok">已获取位置</text>
+    <text wx:else class="location-ok">已获取位置，可随机选餐厅</text>
   </view>
 
   <view class="section card">

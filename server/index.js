@@ -74,33 +74,50 @@ async function overpassQuery(query) {
   throw new Error(lastErr?.message || 'Overpass API 暂时不可用，请稍后再试');
 }
 
-/** 附近餐厅：范围内餐饮点，按距离排序 */
+/** 附近餐厅：范围内餐饮点，按距离排序；空结果时自动扩大范围重试 */
 async function searchNearby(lat, lng, radiusMeters) {
-  const radius = Math.min(50000, Math.max(100, radiusMeters));
-  const query = `
-[out:json][timeout:15];
+  let radius = Math.min(50000, Math.max(100, radiusMeters));
+  const maxDistKm = radiusMeters / 1000;
+  const amenityRegex = '^(restaurant|cafe|fast_food|bar|pub|food_court)$';
+  const runQuery = async (r) => {
+    const query = `
+[out:json][timeout:20];
 (
-  node(around:${radius},${lat},${lng})[amenity~"^(restaurant|cafe|fast_food)$"];
-  way(around:${radius},${lat},${lng})[amenity~"^(restaurant|cafe|fast_food)$"];
+  node(around:${r},${lat},${lng})[amenity~"${amenityRegex}"];
+  way(around:${r},${lat},${lng})[amenity~"${amenityRegex}"];
 );
 out body center;
-  `.trim();
+    `.trim();
+    const data = await overpassQuery(query);
+    return data.elements || [];
+  };
 
-  const data = await overpassQuery(query);
-  const elements = data.elements || [];
+  let elements = await runQuery(radius);
+  let useFallback = false;
+  if (elements.length === 0 && radius < 10000) {
+    elements = await runQuery(10000);
+    useFallback = true;
+  }
+  if (elements.length === 0) {
+    elements = await runQuery(50000);
+    useFallback = true;
+  }
+
   const list = [];
   for (const el of elements) {
     const pos = getLatLon(el);
     if (!pos) continue;
+    const dist = haversineKm(lat, lng, pos.lat, pos.lon);
+    if (!useFallback && dist > maxDistKm) continue;
     const name = el.tags?.name || el.tags?.brand || '未知';
     list.push({
       name,
       address: formatAddress(el.tags),
-      distance: haversineKm(lat, lng, pos.lat, pos.lon),
+      distance: dist,
     });
   }
   list.sort((a, b) => a.distance - b.distance);
-  return list;
+  return list.slice(0, 30);
 }
 
 /** 菜系关键词 -> OSM cuisine 或名称匹配（用于按菜系筛选）*/
@@ -118,11 +135,12 @@ const CUISINE_MAP = {
 /** 按菜系搜索：大范围内取餐饮点，再按菜系关键词/OSM cuisine 筛选，按距离排序 */
 async function searchByCuisine(cuisine, lat, lng) {
   const radius = 50000;
+  const amenityRegex = '^(restaurant|cafe|fast_food|bar|pub|food_court)$';
   const query = `
-[out:json][timeout:20];
+[out:json][timeout:25];
 (
-  node(around:${radius},${lat},${lng})[amenity~"^(restaurant|cafe|fast_food)$"];
-  way(around:${radius},${lat},${lng})[amenity~"^(restaurant|cafe|fast_food)$"];
+  node(around:${radius},${lat},${lng})[amenity~"${amenityRegex}"];
+  way(around:${radius},${lat},${lng})[amenity~"${amenityRegex}"];
 );
 out body center;
   `.trim();
