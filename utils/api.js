@@ -16,20 +16,28 @@ function useRealApi() {
  * @returns {Promise<Array>} 餐厅列表
  */
 function getNearbyRestaurants(lat, lng, radiusMeters) {
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: `${config.API_BASE}/nearby`,
-      method: 'GET',
-      data: { lat, lng, radius: radiusMeters },
-      success(res) {
-        if (res.statusCode === 200) {
-          const list = (res.data && res.data.list) ? res.data.list : [];
-          resolve(Array.isArray(list) ? list : []);
-        } else {
-          reject(new Error(res.data?.message || '获取餐厅失败'));
-        }
-      },
-      fail: (err) => reject(err || new Error('网络请求失败'))
+  function doRequest() {
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${config.API_BASE}/nearby`,
+        method: 'GET',
+        data: { lat, lng, radius: radiusMeters },
+        timeout: 60000,
+        success(res) {
+          if (res.statusCode === 200) {
+            const list = (res.data && res.data.list) ? res.data.list : [];
+            resolve(Array.isArray(list) ? list : []);
+          } else {
+            reject(new Error(res.data?.message || '获取餐厅失败'));
+          }
+        },
+        fail: (err) => reject(err || new Error('网络请求失败'))
+      });
+    });
+  }
+  return doRequest().catch(function (err) {
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () { doRequest().then(resolve, reject); }, 1500);
     });
   });
 }
@@ -41,20 +49,28 @@ function getNearbyRestaurants(lat, lng, radiusMeters) {
  * @param {number} lng 经度
  */
 function getRestaurantsByCuisine(cuisine, lat, lng) {
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: `${config.API_BASE}/cuisine`,
-      method: 'GET',
-      data: { cuisine, lat, lng },
-      success(res) {
-        if (res.statusCode === 200) {
-          const list = (res.data && res.data.list) ? res.data.list : [];
-          resolve(Array.isArray(list) ? list : []);
-        } else {
-          reject(new Error(res.data?.message || '获取餐厅失败'));
-        }
-      },
-      fail: (err) => reject(err || new Error('网络请求失败'))
+  function doRequest() {
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${config.API_BASE}/cuisine`,
+        method: 'GET',
+        data: { cuisine, lat, lng },
+        timeout: 60000,
+        success(res) {
+          if (res.statusCode === 200) {
+            const list = (res.data && res.data.list) ? res.data.list : [];
+            resolve(Array.isArray(list) ? list : []);
+          } else {
+            reject(new Error(res.data?.message || '获取餐厅失败'));
+          }
+        },
+        fail: (err) => reject(err || new Error('网络请求失败'))
+      });
+    });
+  }
+  return doRequest().catch(function (err) {
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () { doRequest().then(resolve, reject); }, 1500);
     });
   });
 }

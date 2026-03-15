@@ -47,7 +47,7 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "2.19.4",
+  "libVersion": "3.15.0",
   "appid": "wxb849e0291edb13a1",
   "projectname": "今天吃啥",
   "condition": {},
