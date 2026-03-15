@@ -6,7 +6,8 @@ Page({
   data: {
     hasLocation: false,
     locationAuthorized: false,
-    locationLabel: '', // 当前定位：珠海 / 澳门，用于核对
+    locationLabel: '',
+    locationCoords: '', // 经纬度，便于核对是否传对
     distance: 2,
     result: null
   },
@@ -47,10 +48,12 @@ Page({
           var loc = app && app.globalData && app.globalData.location;
           var hasLocation = !!loc;
           var label = hasLocation ? this.getLocationLabel(loc.latitude, loc.longitude) : '';
+          var coords = hasLocation ? (loc.latitude.toFixed(4) + ', ' + loc.longitude.toFixed(4)) : '';
           this.setData({
             locationAuthorized: auth === true,
             hasLocation: hasLocation,
             locationLabel: label,
+            locationCoords: coords,
           });
           if (auth === true && !hasLocation) this.requestLocation();
         },
@@ -67,7 +70,8 @@ Page({
       success: (res) => {
         app.globalData.location = { latitude: res.latitude, longitude: res.longitude };
         var label = this.getLocationLabel(res.latitude, res.longitude);
-        this.setData({ hasLocation: true, locationAuthorized: true, locationLabel: label });
+        var coords = res.latitude.toFixed(4) + ', ' + res.longitude.toFixed(4);
+        this.setData({ hasLocation: true, locationAuthorized: true, locationLabel: label, locationCoords: coords });
         wx.showToast({ title: '定位成功', icon: 'success' });
       },
       fail: (err) => {
@@ -101,35 +105,55 @@ Page({
     wx.showLoading({ title: '抽签中…' });
 
     var self = this;
-    function doFetch() {
-      var loc = app.globalData.location;
-      if (!loc) return Promise.reject(new Error('请先开启定位'));
+    function doFetch(lat, lng) {
+      if (!lat || !lng) return Promise.reject(new Error('请先开启定位'));
       return api.useRealApi()
-        ? api.getNearbyRestaurants(loc.latitude, loc.longitude, radiusMeters)
+        ? api.getNearbyRestaurants(lat, lng, radiusMeters)
         : api.getMockNearbyRestaurants(parseFloat(distance));
     }
 
-    doFetch();
+    function runWithLocation() {
+      var loc = app.globalData.location;
+      if (!loc) {
+        wx.hideLoading();
+        wx.showToast({ title: '请先开启定位', icon: 'none' });
+        return;
+      }
+      doFetch(loc.latitude, loc.longitude)
+        .then(function (list) {
+          wx.hideLoading();
+          if (!list || list.length === 0) {
+            wx.showToast({ title: '该范围内暂无餐厅', icon: 'none' });
+            return;
+          }
+          var valid = list.filter(function (item) { return item.name && item.name !== '未知'; });
+          if (valid.length === 0) {
+            wx.showToast({ title: '该范围内暂无餐厅', icon: 'none' });
+            return;
+          }
+          var randomIndex = Math.floor(Math.random() * valid.length);
+          var result = valid[randomIndex];
+          self.setData({ result: result });
+          wx.showToast({ title: '选好啦', icon: 'success' });
+        })
+        .catch(function () {
+          wx.hideLoading();
+          wx.showToast({ title: '获取失败，请稍后再试', icon: 'none' });
+        });
+    }
 
-    fetchList.then(list => {
-        wx.hideLoading();
-        if (!list || list.length === 0) {
-          wx.showToast({ title: '该范围内暂无餐厅', icon: 'none' });
-          return;
-        }
-        var valid = list.filter(function (item) { return item.name && item.name !== '未知'; });
-        if (valid.length === 0) {
-          wx.showToast({ title: '该范围内暂无餐厅', icon: 'none' });
-          return;
-        }
-        var randomIndex = Math.floor(Math.random() * valid.length);
-        var result = valid[randomIndex];
-        this.setData({ result: result });
-        wx.showToast({ title: '选好啦', icon: 'success' });
-      })
-      .catch(() => {
-        wx.hideLoading();
-        wx.showToast({ title: '获取失败，请稍后再试', icon: 'none' });
-      });
+    wx.getLocation({
+      type: 'gcj02',
+      success: function (res) {
+        app.globalData.location = { latitude: res.latitude, longitude: res.longitude };
+        var label = self.getLocationLabel(res.latitude, res.longitude);
+        var coords = res.latitude.toFixed(4) + ', ' + res.longitude.toFixed(4);
+        self.setData({ locationLabel: label, locationCoords: coords });
+        runWithLocation();
+      },
+      fail: function () {
+        runWithLocation();
+      }
+    });
   }
 });

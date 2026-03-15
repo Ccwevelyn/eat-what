@@ -16,12 +16,12 @@ function useRealApi() {
  * @returns {Promise<Array>} 餐厅列表
  */
 function getNearbyRestaurants(lat, lng, radiusMeters) {
+  var url = config.API_BASE + '/nearby?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng) + '&radius=' + encodeURIComponent(radiusMeters);
   function doRequest() {
     return new Promise((resolve, reject) => {
       wx.request({
-        url: `${config.API_BASE}/nearby`,
+        url: url,
         method: 'GET',
-        data: { lat, lng, radius: radiusMeters },
         timeout: 60000,
         success(res) {
           if (res.statusCode === 200) {
@@ -49,12 +49,12 @@ function getNearbyRestaurants(lat, lng, radiusMeters) {
  * @param {number} lng 经度
  */
 function getRestaurantsByCuisine(cuisine, lat, lng) {
+  var url = config.API_BASE + '/cuisine?cuisine=' + encodeURIComponent(cuisine) + '&lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng);
   function doRequest() {
     return new Promise((resolve, reject) => {
       wx.request({
-        url: `${config.API_BASE}/cuisine`,
+        url: url,
         method: 'GET',
-        data: { cuisine, lat, lng },
         timeout: 60000,
         success(res) {
           if (res.statusCode === 200) {

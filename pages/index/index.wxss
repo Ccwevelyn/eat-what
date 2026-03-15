@@ -72,6 +72,16 @@
   color: #52c41a;
   font-size: 28rpx;
 }
+.location-debug {
+  display: block;
+  margin-top: 12rpx;
+  color: #6B4EAA;
+  font-size: 24rpx;
+}
+.location-debug.coords {
+  color: #888;
+  font-size: 22rpx;
+}
 
 .slider-wrap {
   display: flex;

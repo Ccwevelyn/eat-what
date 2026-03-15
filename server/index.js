@@ -38,10 +38,18 @@ function getLatLon(el) {
   return null;
 }
 
-/** 从 OSM tags 取地区（城市/区/街道等），不限定澳门/珠海 */
-function getRegion(tags) {
+/** 从 OSM tags 取地区（城市/区等） */
+function getRegionFromTags(tags) {
   if (!tags) return '';
   return tags['addr:city'] || tags['addr:suburb'] || tags['addr:district'] || tags['addr:state'] || tags['addr:province'] || '';
+}
+
+/** 根据经纬度推断城市（珠海/澳门），用于修正 OSM 里误标或缺失的地区 */
+function inferCityByCoords(lat, lon) {
+  if (lat == null || lon == null) return '';
+  if (lat >= 22.14 && lat <= 22.22 && lon >= 113.52 && lon <= 113.60) return '澳门';
+  if (lat >= 22.0 && lat <= 22.6 && lon >= 113.0 && lon <= 114.0) return '珠海';
+  return '';
 }
 
 /** 从 tags 拼详细地址（通用，用 OSM 的 addr:*） */
@@ -55,6 +63,24 @@ function formatAddress(tags) {
   const num = tags['addr:housenumber'] || '';
   const parts = [city, suburb, street, num].filter(Boolean);
   return parts.join(' ') || '';
+}
+
+/** 最终展示的 region：优先用坐标推断的城市（珠海/澳门），否则用 OSM */
+function getRegion(tags, lat, lon) {
+  const inferred = inferCityByCoords(lat, lon);
+  if (inferred) return inferred;
+  return getRegionFromTags(tags);
+}
+
+/** 最终展示的 address：用坐标推断修正“误标澳门”的珠海店铺 */
+function getAddress(tags, lat, lon) {
+  let raw = formatAddress(tags);
+  const inferred = inferCityByCoords(lat, lon);
+  if (inferred === '珠海' && raw && (raw.indexOf('澳门') === 0 || raw.startsWith('澳门 '))) {
+    raw = '珠海 ' + raw.replace(/^澳门\s*/, '').trim();
+  }
+  if (!raw && inferred) raw = inferred + ' (暂无详细地址)';
+  return raw || '';
 }
 
 /** OSM cuisine 英文 -> 中文菜系 */
@@ -133,8 +159,8 @@ out body center;
     const cuisine = formatCuisine(el.tags);
     list.push({
       name,
-      region: getRegion(el.tags),
-      address: formatAddress(el.tags),
+      region: getRegion(el.tags, pos.lat, pos.lon),
+      address: getAddress(el.tags, pos.lat, pos.lon),
       distance: dist,
       cuisine: cuisine || undefined,
     });
@@ -185,8 +211,8 @@ out body center;
     const cuisineStr = formatCuisine(el.tags) || cuisine;
     list.push({
       name: displayName,
-      region: getRegion(el.tags),
-      address: formatAddress(el.tags),
+      region: getRegion(el.tags, pos.lat, pos.lon),
+      address: getAddress(el.tags, pos.lat, pos.lon),
       distance: haversineKm(lat, lng, pos.lat, pos.lon),
       cuisine: cuisineStr,
     });

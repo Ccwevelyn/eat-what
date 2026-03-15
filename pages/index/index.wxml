@@ -8,7 +8,11 @@
       <text wx:else class="status-off">未开启位置共享</text>
     </view>
     <button wx:if="{{!hasLocation}}" class="btn primary" bindtap="requestLocation">开启定位</button>
-    <text wx:else class="location-ok">已获取位置，可随机选餐厅</text>
+    <block wx:else>
+      <text class="location-ok">已获取位置，可随机选餐厅</text>
+      <text wx:if="{{locationLabel}}" class="location-debug">当前定位：{{ locationLabel }}</text>
+      <text wx:if="{{locationCoords}}" class="location-debug coords">{{ locationCoords }}</text>
+    </block>
   </view>
 
   <view class="section card">
