@@ -1,8 +1,8 @@
 // pages/wheel/wheel.js
 const app = getApp();
 const api = require('../../utils/api.js');
+const i18n = require('../../utils/i18n.js');
 
-// 菜系列表（可继续扩充）
 const CUISINES = [
   { name: '茶餐厅' },
   { name: '韩餐' },
@@ -17,6 +17,8 @@ const CUISINES = [
 
 Page({
   data: {
+    t: i18n.zh,
+    lang: 'zh',
     cuisines: CUISINES,
     wheelRotation: 0,
     spinning: false,
@@ -24,8 +26,33 @@ Page({
     restaurantList: []
   },
 
+  applyI18n() {
+    var lang = app.globalData.lang || 'zh';
+    var texts = i18n[lang] || i18n.zh;
+    this.setData({ t: texts, lang: lang });
+    wx.setNavigationBarTitle({ title: texts.appTitle || '今天吃啥' });
+    var tabBar = this.getTabBar && this.getTabBar();
+    if (tabBar && tabBar.setData) {
+      tabBar.setData({
+        list: [
+          { pagePath: '/pages/index/index', text: (i18n[lang] || i18n.zh).tabNearby, icon: 'circle' },
+          { pagePath: '/pages/wheel/wheel', text: (i18n[lang] || i18n.zh).tabWheel, icon: 'triangle' },
+          { pagePath: '/pages/about/about', text: (i18n[lang] || i18n.zh).tabAbout, icon: 'diamond' }
+        ]
+      });
+    }
+  },
+
+  switchLang() {
+    var next = app.globalData.lang === 'zh' ? 'en' : 'zh';
+    app.globalData.lang = next;
+    wx.setStorageSync('lang', next);
+    this.applyI18n();
+  },
+
   onShow() {
     try {
+      this.applyI18n();
       var tabBar = this.getTabBar && this.getTabBar();
       if (tabBar && typeof tabBar.setData === 'function') tabBar.setData({ selected: 1 });
     } catch (e) {}
@@ -55,20 +82,23 @@ Page({
     const lat = location ? location.latitude : 22.1987;
     const lng = location ? location.longitude : 113.5439;
 
-    wx.showLoading({ title: '加载餐厅…' });
+    var t = this.data.t || i18n.zh;
+    var lang = app.globalData.lang || 'zh';
+    wx.showLoading({ title: lang === 'en' ? 'Loading…' : '加载餐厅…' });
     const fetchList = api.useRealApi()
       ? api.getRestaurantsByCuisine(cuisine, lat, lng)
       : api.getMockRestaurantsByCuisine(cuisine);
+    var self = this;
     fetchList.then(list => {
         wx.hideLoading();
         var withCuisine = (list || []).map(function (item) {
           return Object.assign({}, item, { cuisine: item.cuisine || cuisine });
         });
-        this.setData({ restaurantList: withCuisine });
+        self.setData({ restaurantList: withCuisine });
       })
       .catch(() => {
         wx.hideLoading();
-        wx.showToast({ title: '加载失败', icon: 'none' });
+        wx.showToast({ title: (self.data.t && self.data.t.toastFail) || '加载失败', icon: 'none' });
       });
   }
 });

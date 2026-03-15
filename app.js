@@ -1,7 +1,9 @@
-// app.js - 今天吃啥 小程序入口（一打开即进入首页）
+// app.js - 今天吃啥 小程序入口
 App({
   onLaunch() {
     try {
+      var lang = wx.getStorageSync('lang') || 'zh';
+      this.globalData.lang = lang;
       wx.getSystemInfo({
         success: function(res) {
           if (res) getApp().globalData.systemInfo = res;
@@ -16,6 +18,7 @@ App({
   globalData: {
     userInfo: null,
     location: null,
-    systemInfo: null
+    systemInfo: null,
+    lang: 'zh'
   }
 });

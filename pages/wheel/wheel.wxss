@@ -1,4 +1,16 @@
 /* pages/wheel/wheel.wxss */
+.lang-switch {
+  position: fixed;
+  top: 24rpx;
+  right: 24rpx;
+  z-index: 100;
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  color: #6B4EAA;
+  background: rgba(255,255,255,0.95);
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+}
 .container {
   padding: 32rpx;
   padding-bottom: 120rpx;

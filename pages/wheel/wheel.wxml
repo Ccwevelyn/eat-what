@@ -1,4 +1,5 @@
 <!--pages/wheel/wheel.wxml - 第二页：菜系转盘 -->
+<view class="lang-switch" bindtap="switchLang">{{lang === 'zh' ? t.langEn : t.langZh}}</view>
 <view class="container">
   <view class="wheel-wrap">
     <view class="pointer">▼</view>
@@ -16,24 +17,24 @@
       </view>
     </view>
     <view class="wheel-center" bindtap="onSpinTap">
-      <text class="center-text">{{ spinning ? '转盘中…' : '点我转' }}</text>
+      <text class="center-text">{{ spinning ? (t.wheelSpinning || '转盘中…') : (t.wheelSpin || '点我转') }}</text>
     </view>
   </view>
 
   <view wx:if="{{ selectedCuisine }}" class="section card">
-    <text class="cuisine-title">今日菜系：{{ selectedCuisine }}</text>
-    <text class="cuisine-desc">以下为该菜系餐厅（由近到远）</text>
+    <text class="cuisine-title">{{t.wheelCuisineTodayPrefix}}{{ selectedCuisine }}</text>
+    <text class="cuisine-desc">{{t.wheelCuisineDesc}}</text>
     <view class="restaurant-list">
       <view class="rest-item" wx:for="{{ restaurantList }}" wx:key="name" wx:if="{{ item.name !== '未知' }}">
         <text class="rest-name">{{ item.name }}</text>
-        <text wx:if="{{ item.cuisine }}" class="rest-cuisine">菜系：{{ item.cuisine }}</text>
-        <text wx:if="{{ item.region && item.region !== '未知' }}" class="rest-address-label">地区</text>
+        <text wx:if="{{ item.cuisine }}" class="rest-cuisine">{{t.cuisineLabel}}{{ item.cuisine }}</text>
+        <text wx:if="{{ item.region && item.region !== '未知' }}" class="rest-address-label">{{t.regionLabel}}</text>
         <text wx:if="{{ item.region && item.region !== '未知' }}" class="rest-address">{{ item.region }}</text>
         <block wx:if="{{ item.address && item.address !== '未知' }}">
-          <text class="rest-address-label">详细地址</text>
+          <text class="rest-address-label">{{t.addressLabel}}</text>
           <text class="rest-address">{{ item.address }}</text>
         </block>
-        <text class="rest-distance">约 {{ item.distance }} km</text>
+        <text class="rest-distance">{{t.distanceAboutBefore}}{{ item.distance }}{{t.distanceAboutAfter}}</text>
       </view>
     </view>
   </view>

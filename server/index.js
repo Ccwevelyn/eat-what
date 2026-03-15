@@ -1,6 +1,6 @@
 /**
- * 今天吃啥 - 后端（完全免费，无需 API Key）
- * Overpass 查附近餐厅，Nominatim 逆地理将经纬度转为可读地址。
+ * 今天吃啥 - 后端
+ * Overpass 查附近餐厅；逆地理用高德（内地+澳门），需配置 AMAP_KEY。
  */
 
 const http = require('http');
@@ -11,12 +11,40 @@ const OVERPASS_URLS = [
   'https://overpass.kumi.systems/api/interpreter',
 ];
 const OVERPASS_TIMEOUT_MS = 25000;
-const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse';
-const NOMINATIM_DELAY_MS = 1100; // 遵守 Nominatim 使用政策：1 请求/秒
-const NOMINATIM_MAX_ITEMS = 15;   // 仅对前 15 条调 Nominatim，全部为可读地址
+const AMAP_REGEO_URL = 'https://restapi.amap.com/v3/geocode/regeo';
+const ENRICH_MAX_ITEMS = 15;
+
+const AMAP_KEY = process.env.AMAP_KEY || '';
 
 // 澳门大致中心，用于无 location 时的兜底
 const MACAU_CENTER = { lat: 22.1987, lng: 113.5439 };
+
+/** WGS84 → GCJ02（高德/国内坐标系），用于调用高德 API */
+function wgs84ToGcj02(lat, lon) {
+  const a = 6378245.0;
+  const ee = 0.00669342162296594323;
+  function transformLat(x, y) {
+    let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+    ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+    ret += (20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin(y / 3.0 * Math.PI)) * 2.0 / 3.0;
+    return ret;
+  }
+  function transformLon(x, y) {
+    let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+    ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+    ret += (20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin(x / 3.0 * Math.PI)) * 2.0 / 3.0;
+    return ret;
+  }
+  const dLat = transformLat(lon - 105.0, lat - 35.0);
+  const dLon = transformLon(lon - 105.0, lat - 35.0);
+  const radLat = lat / 180.0 * Math.PI;
+  let magic = Math.sin(radLat);
+  magic = 1 - ee * magic * magic;
+  const sqrtMagic = Math.sqrt(magic);
+  const dLat2 = dLat * 180.0 / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+  const dLon2 = dLon * 180.0 / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+  return { lat: lat + dLat2, lng: lon + dLon2 };
+}
 
 /** Haversine 公式：两点经纬度求距离（公里） */
 function haversineKm(lat1, lng1, lat2, lng2) {
@@ -76,30 +104,34 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Nominatim 逆地理：经纬度 → 可读地址（需遵守 1 请求/秒，调用方负责间隔） */
-async function nominatimReverse(lat, lon) {
+/** 高德逆地理（内地+澳门；坐标用 GCJ02） */
+async function amapRegeo(lng, lat) {
+  if (!AMAP_KEY) return '';
   try {
-    const url = `${NOMINATIM_URL}?lat=${lat}&lon=${lon}&format=json`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'EatWhat/1.0 (wechat miniapp; contact: ccwevelyncambridge@outlook.com)' },
-    });
+    const url = `${AMAP_REGEO_URL}?key=${encodeURIComponent(AMAP_KEY)}&location=${lng},${lat}`;
+    const res = await fetch(url);
     if (!res.ok) return '';
     const data = await res.json();
-    return data.display_name || '';
+    if (data.status !== '1' || !data.regeocode) return '';
+    return data.regeocode.formatted_address || '';
   } catch (e) {
     return '';
   }
 }
 
-/** 对列表前 N 条用 Nominatim 补全可读地址（串行 + 间隔） */
-async function enrichAddressesWithNominatim(list) {
-  const toEnrich = list.slice(0, NOMINATIM_MAX_ITEMS);
+/** 对列表前 N 条用高德逆地理转成可读地址（需配置 AMAP_KEY） */
+async function enrichAddresses(list) {
+  if (!AMAP_KEY) {
+    list.forEach((item) => { delete item.lat; delete item.lon; });
+    return;
+  }
+  const toEnrich = list.slice(0, ENRICH_MAX_ITEMS);
   for (const item of toEnrich) {
-    if (item.lat != null && item.lon != null) {
-      const addr = await nominatimReverse(item.lat, item.lon);
-      if (addr) item.address = addr;
-      await sleep(NOMINATIM_DELAY_MS);
-    }
+    if (item.lat == null || item.lon == null) continue;
+    const gcj = wgs84ToGcj02(item.lat, item.lon);
+    const addr = await amapRegeo(gcj.lng, gcj.lat);
+    if (addr) item.address = addr;
+    await sleep(120);
   }
   list.forEach((item) => {
     delete item.lat;
@@ -181,7 +213,7 @@ out body center;
   }
   list.sort((a, b) => a.distance - b.distance);
   const out = list.slice(0, 15);
-  await enrichAddressesWithNominatim(out);
+  await enrichAddresses(out);
   return out;
 }
 
@@ -239,7 +271,7 @@ out body center;
   }
   list.sort((a, b) => a.distance - b.distance);
   const out = list.slice(0, 15);
-  await enrichAddressesWithNominatim(out);
+  await enrichAddresses(out);
   return out;
 }
 

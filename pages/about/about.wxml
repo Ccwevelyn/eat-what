@@ -1,4 +1,5 @@
 <!--pages/about/about.wxml - 第三页：声明与鸣谢 -->
+<view class="lang-switch" bindtap="switchLang">{{lang === 'zh' ? t.langEn : t.langZh}}</view>
 <view class="container">
   <view class="section card">
     <text class="title">数据来源说明</text>
