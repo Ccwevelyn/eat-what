@@ -1,0 +1,23 @@
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 微信开发者工具
+project.private.config.json
+
+# 日志与临时
+*.log
+.env
+.env.local

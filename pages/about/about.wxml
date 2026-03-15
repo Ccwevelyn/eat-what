@@ -1,0 +1,33 @@
+<!--pages/about/about.wxml - 第三页：声明与鸣谢 -->
+<view class="container">
+  <view class="section card">
+    <text class="title">数据来源说明</text>
+    <text class="body">本小程序使用 OpenStreetMap（Overpass API）查询餐厅与距离。OSM 为开放数据、免费使用，无需 API Key。所有数据仅供「今天吃啥」随机推荐使用。</text>
+  </view>
+
+  <view class="section card">
+    <text class="title">非营利声明</text>
+    <text class="body">本小程序不以盈利为目的，仅供个人与朋友使用，解决「每天都不知道吃啥」的选择困难。</text>
+  </view>
+
+  <view class="section card thanks">
+    <text class="title">特别鸣谢</text>
+    <text class="body">感谢朋友<text class="name">陈嘉怡</text>——正是因为你对「每天都不知道吃啥」的犹豫，才有了做这个小程序的想法。谢谢你的灵感！</text>
+  </view>
+
+  <view class="section card">
+    <text class="title">免责声明</text>
+    <text class="body">本人不对任何餐厅进行推广，所有推荐结果仅为随机或基于距离/菜系的展示，不构成商业合作或背书。</text>
+  </view>
+
+  <view class="section card contact">
+    <text class="title">联系我</text>
+    <text class="body">如有问题或建议，欢迎来信：</text>
+    <text class="email" selectable>ccwevelyncambridge@outlook.com</text>
+  </view>
+
+  <view class="nav-links">
+    <navigator url="/pages/index/index" class="link">附近随机</navigator>
+    <navigator url="/pages/wheel/wheel" class="link">菜系转盘</navigator>
+  </view>
+</view>

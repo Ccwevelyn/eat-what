@@ -1,0 +1,35 @@
+<!--pages/wheel/wheel.wxml - 第二页：菜系转盘 -->
+<view class="container">
+  <view class="wheel-wrap">
+    <view class="pointer">▼</view>
+    <view class="wheel-outer" style="transform: rotate({{ wheelRotation }}deg);">
+      <view class="wheel-inner">
+        <block wx:for="{{ cuisines }}" wx:key="name">
+          <view class="segment" style="--i: {{ index }}; --total: {{ cuisines.length }};">
+            <text class="segment-text">{{ item.name }}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+    <view class="wheel-center" bindtap="onSpinTap">
+      <text class="center-text">{{ spinning ? '转盘中…' : '点我转' }}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{ selectedCuisine }}" class="section card">
+    <text class="cuisine-title">今日菜系：{{ selectedCuisine }}</text>
+    <text class="cuisine-desc">以下为该菜系餐厅（由近到远）</text>
+    <view class="restaurant-list">
+      <view class="rest-item" wx:for="{{ restaurantList }}" wx:key="name">
+        <text class="rest-name">{{ item.name }}</text>
+        <text class="rest-address">{{ item.address }}</text>
+        <text class="rest-distance">约 {{ item.distance }} km</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="nav-links">
+    <navigator url="/pages/index/index" class="link">← 附近随机</navigator>
+    <navigator url="/pages/about/about" class="link">关于与声明</navigator>
+  </view>
+</view>

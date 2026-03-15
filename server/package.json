@@ -1,0 +1,12 @@
+{
+  "name": "eatwhat-backend",
+  "version": "1.0.0",
+  "description": "今天吃啥 - 后端（Google Places API，澳门）",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

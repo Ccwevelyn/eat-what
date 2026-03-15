@@ -1,0 +1,46 @@
+<!--pages/index/index.wxml - 第一页：附近随机餐厅 -->
+<view class="container">
+  <view class="section card">
+    <text class="title">📍 允许获取位置</text>
+    <text class="desc">用于在您选择的距离范围内推荐附近餐厅</text>
+    <button wx:if="{{!hasLocation}}" class="btn primary" bindtap="requestLocation">开启定位</button>
+    <text wx:else class="location-ok">已获取位置</text>
+  </view>
+
+  <view class="section card">
+    <text class="title">选择可接受的距离</text>
+    <view class="slider-wrap">
+      <text class="slider-label">0 km</text>
+      <slider
+        class="slider"
+        min="0"
+        max="2"
+        step="0.2"
+        value="{{distance}}"
+        activeColor="#FF6B35"
+        backgroundColor="#eee"
+        block-size="24"
+        show-value
+        bindchange="onDistanceChange"
+      />
+      <text class="slider-label">2 km</text>
+    </view>
+    <text class="distance-text">当前：{{ distance }} km 以内</text>
+  </view>
+
+  <view class="section card">
+    <button class="btn primary big" disabled="{{!hasLocation}}" bindtap="onRandomTap">随机选一家</button>
+  </view>
+
+  <view wx:if="{{result}}" class="section card result">
+    <text class="result-title">🎲 就是它了</text>
+    <text class="result-name">{{ result.name }}</text>
+    <text class="result-address">{{ result.address }}</text>
+    <text wx:if="{{result.distance}}" class="result-distance">约 {{ result.distance }} km</text>
+  </view>
+
+  <view class="nav-links">
+    <navigator url="/pages/wheel/wheel" class="link">去菜系转盘 →</navigator>
+    <navigator url="/pages/about/about" class="link">关于与声明</navigator>
+  </view>
+</view>

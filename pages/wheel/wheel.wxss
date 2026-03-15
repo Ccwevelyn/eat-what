@@ -1,0 +1,160 @@
+/* pages/wheel/wheel.wxss */
+.container {
+  padding: 32rpx;
+  min-height: 100vh;
+}
+
+.wheel-wrap {
+  position: relative;
+  width: 560rpx;
+  height: 560rpx;
+  margin: 40rpx auto;
+}
+
+.pointer {
+  position: absolute;
+  left: 50%;
+  top: -8rpx;
+  margin-left: -24rpx;
+  z-index: 20;
+  color: #333;
+  font-size: 36rpx;
+  text-align: center;
+  line-height: 1;
+}
+
+.wheel-outer {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  transition: transform 4s cubic-bezier(0.2, 0.8, 0.3, 1);
+  box-shadow: 0 8rpx 40rpx rgba(0,0,0,0.15);
+}
+
+.wheel-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 50%;
+}
+
+.segment {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 50%;
+  height: 50%;
+  transform-origin: 0% 0%;
+  /* 每个扇形间隔 45deg（8 格），扇形为 45deg 的楔形 */
+  transform: rotate(calc(360deg * var(--i) / 8));
+  clip-path: polygon(0 0, 100% 0, 70.7% 70.7%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 24rpx;
+  padding-left: 20rpx;
+  box-sizing: border-box;
+}
+
+.segment:nth-child(1) { background: #FF6B35; }
+.segment:nth-child(2) { background: #F7931E; }
+.segment:nth-child(3) { background: #FF8C42; }
+.segment:nth-child(4) { background: #E85D04; }
+.segment:nth-child(5) { background: #DC2F02; }
+.segment:nth-child(6) { background: #D00000; }
+.segment:nth-child(7) { background: #9D0208; }
+.segment:nth-child(8) { background: #6A040F; }
+
+.segment-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1rpx 2rpx rgba(0,0,0,0.3);
+  transform: rotate(calc(-45deg * var(--i) - 22.5deg));
+  white-space: nowrap;
+}
+
+.wheel-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160rpx;
+  height: 160rpx;
+  margin-left: -80rpx;
+  margin-top: -80rpx;
+  background: #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.3);
+  z-index: 10;
+}
+
+.center-text {
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.section.card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 36rpx;
+  margin-top: 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06);
+}
+
+.cuisine-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #FF6B35;
+  margin-bottom: 8rpx;
+}
+
+.cuisine-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 24rpx;
+}
+
+.restaurant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.rest-item {
+  padding: 20rpx;
+  background: #f8f8f8;
+  border-radius: 16rpx;
+}
+
+.rest-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.rest-address, .rest-distance {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  margin-top: 6rpx;
+}
+
+.nav-links {
+  margin-top: 48rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24rpx;
+}
+
+.link {
+  color: #FF6B35;
+  font-size: 28rpx;
+}
