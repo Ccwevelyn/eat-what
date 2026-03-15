@@ -100,10 +100,6 @@ function formatCuisine(tags) {
   return CUISINE_ZH[raw] || raw || '';
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 /** 高德逆地理（内地+澳门；坐标用 GCJ02） */
 async function amapRegeo(lng, lat) {
   if (!AMAP_KEY) return '';
@@ -119,20 +115,21 @@ async function amapRegeo(lng, lat) {
   }
 }
 
-/** 对列表前 N 条用高德逆地理转成可读地址（需配置 AMAP_KEY） */
+/** 对列表前 N 条用高德逆地理转成可读地址（并行请求，加快响应） */
 async function enrichAddresses(list) {
   if (!AMAP_KEY) {
     list.forEach((item) => { delete item.lat; delete item.lon; });
     return;
   }
   const toEnrich = list.slice(0, ENRICH_MAX_ITEMS);
-  for (const item of toEnrich) {
-    if (item.lat == null || item.lon == null) continue;
-    const gcj = wgs84ToGcj02(item.lat, item.lon);
-    const addr = await amapRegeo(gcj.lng, gcj.lat);
-    if (addr) item.address = addr;
-    await sleep(120);
-  }
+  await Promise.all(
+    toEnrich.map(async (item) => {
+      if (item.lat == null || item.lon == null) return;
+      const gcj = wgs84ToGcj02(item.lat, item.lon);
+      const addr = await amapRegeo(gcj.lng, gcj.lat);
+      if (addr) item.address = addr;
+    })
+  );
   list.forEach((item) => {
     delete item.lat;
     delete item.lon;

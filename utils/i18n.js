@@ -33,7 +33,7 @@ module.exports = {
     wheelCuisineTodayPrefix: '今日菜系：',
     wheelCuisineDesc: '以下为该菜系餐厅（由近到远）',
     langZh: '中',
-    langEn: '英',
+    langEn: 'EN',
   },
   en: {
     appTitle: 'Eat What',
@@ -68,6 +68,6 @@ module.exports = {
     wheelCuisineTodayPrefix: 'Today: ',
     wheelCuisineDesc: 'Restaurants (nearest first)',
     langZh: '中',
-    langEn: 'En',
+    langEn: 'EN',
   },
 };
